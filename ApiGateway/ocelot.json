@@ -1,0 +1,41 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/Students",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "studentsapi",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/Students",
+      "UpstreamHttpMethod": [ "Get", "Post" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Courses",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "coursesapi",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/Courses",
+      "UpstreamHttpMethod": [ "Get", "Post" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Courses/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "coursesapi",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/Courses/{id}",
+      "UpstreamHttpMethod": [ "Get", "Put", "Delete" ]
+    }
+  ],
+  "GlobalConfiguration": {}
+}

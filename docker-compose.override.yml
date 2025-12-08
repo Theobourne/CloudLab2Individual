@@ -1,0 +1,35 @@
+services:
+  apigateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "5094:80"
+    depends_on:
+      - studentsapi
+      - coursesapi
+  coursesapi:
+    container_name: coursesapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__CoursesAPIContext=Server=sqldata;Database=CoursesDB;User ID=sa;Password=My!P@ssword1;TrustServerCertificate=True
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "5092:8080"
+
+  studentsapi:
+    container_name: studentsapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__StudentsAPIContext=Server=sqldata;Database=StudentDB;User Id=sa;Password=My!P@ssword1;Encrypt=False;TrustServerCertificate=True
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "5090:8080"
+      - "5091:443"
+
+  sqldata:
+    container_name: sqldata
+    volumes:
+      - sqldata-volume:/var/opt/mssql
+    ports:
+      - "1433:1433"

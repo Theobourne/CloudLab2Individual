@@ -1,0 +1,57 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" 
+      - "15672:15672" 
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  apigateway:
+    image: ${DOCKER_REGISTRY-}apigateway
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+
+  coursesapi:
+    image: ${DOCKER_REGISTRY-}coursesapi
+    build:
+      context: .
+      dockerfile: CoursesAPI/Dockerfile
+    depends_on:
+      sqldata:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  studentsapi:
+    image: ${DOCKER_REGISTRY-}studentsapi
+    build:
+      context: .
+      dockerfile: StudentsAPI/Dockerfile
+    depends_on:
+      sqldata:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  sqldata:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "My!P@ssword1", "-Q", "EXIT(0);"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    volumes:
+      - sqldata-volume:/var/opt/mssql
+    ports:
+      - "1433:1433"
+volumes: 
+  sqldata-volume:
+  rabbitmq_data:  

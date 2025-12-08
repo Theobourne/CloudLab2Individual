@@ -1,0 +1,44 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+artifacts/
+
+# Rider/VSCode
+.idea/
+.vscode/
+
+# NuGet
+packages/
+*.nupkg
+project.lock.json
+
+# ASP.NET
+appsettings.Development.json
+secrets.json
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# dotnet user secrets token (if present)
+*.usersecrets
+
+# Logs
+*.log
+
+# Database files
+*.mdf
+*.ldf
+
+# Publish output
+publish/
+
+# JetBrains Rider
+*.sln.iml
