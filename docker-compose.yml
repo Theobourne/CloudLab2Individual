@@ -1,4 +1,15 @@
 services:
+  seq:
+    image: datalust/seq:2024.1
+    container_name: seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -8,15 +19,18 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 30s
   apigateway:
     image: ${DOCKER_REGISTRY-}apigateway
     build:
       context: .
       dockerfile: ApiGateway/Dockerfile
+    depends_on:
+      - seq
 
   coursesapi:
     image: ${DOCKER_REGISTRY-}coursesapi
@@ -25,8 +39,10 @@ services:
       dockerfile: CoursesAPI/Dockerfile
     depends_on:
       sqldata:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      seq:
         condition: service_started
 
   studentsapi:
@@ -36,14 +52,29 @@ services:
       dockerfile: StudentsAPI/Dockerfile
     depends_on:
       sqldata:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      seq:
         condition: service_started
+
+  universityweb:
+    image: ${DOCKER_REGISTRY-}universityweb
+    build:
+      context: .
+      dockerfile: UniversityWeb/Dockerfile
+    depends_on:
+      - studentsapi
+      - coursesapi
+      - seq
 
   sqldata:
     image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - SA_PASSWORD=My!P@ssword1
+      - ACCEPT_EULA=Y
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "My!P@ssword1", "-Q", "EXIT(0);"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "localhost", "-U", "sa", "-P", "My!P@ssword1", "-Q", "SELECT 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -54,4 +85,5 @@ services:
       - "1433:1433"
 volumes: 
   sqldata-volume:
-  rabbitmq_data:  
+  rabbitmq_data:
+  seq-data:

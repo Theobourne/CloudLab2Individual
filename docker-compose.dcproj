@@ -10,10 +10,30 @@
     <DockerServiceName>studentsapi</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
+    <None Include="LOGGING_README.md" />
+    <None Include="README.md" />
+    <None Include="SEQ_TROUBLESHOOTING.md" />
+    <None Include="UniversityWeb\appsettings.json" />
+    <None Include="UniversityWeb\Controllers\CoursesController.cs" />
+    <None Include="UniversityWeb\Controllers\HomeController.cs" />
+    <None Include="UniversityWeb\Controllers\StudentsController.cs" />
+    <None Include="UniversityWeb\Models\Course.cs" />
+    <None Include="UniversityWeb\Models\Student.cs" />
+    <None Include="UniversityWeb\Program.cs" />
+    <None Include="UniversityWeb\README.md" />
+    <None Include="UniversityWeb\UniversityWeb.csproj" />
+    <None Include="UniversityWeb\Views\Courses\Index.cshtml" />
+    <None Include="UniversityWeb\Views\Shared\_Layout.cshtml" />
+    <None Include="UniversityWeb\Views\Shared\_ViewImports.cshtml" />
+    <None Include="UniversityWeb\Views\Students\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="scripts\" />
   </ItemGroup>
 </Project>

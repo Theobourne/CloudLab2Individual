@@ -1,0 +1,86 @@
+@{
+    Layout = "_Layout";
+}
+@{
+    var student = ViewBag.Student as Contracts.Models.Student;
+    var courses = ViewBag.Courses as List<Contracts.Models.Course>;
+}
+
+<div class="mb-4">
+  <h1 class="mb-0">Enroll Student</h1>
+  <div class="text-muted">@student?.FirstMidName @student?.LastName</div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Select a Course</h5>
+        <form method="post" asp-action="Enroll">
+          <input type="hidden" name="studentId" value="@student?.ID" />
+          
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Available Courses</label>
+            <select class="form-select" name="courseId" id="courseSelect" required>
+              <option value="">-- Select a course --</option>
+              @if (courses != null)
+              {
+                foreach (var course in courses)
+                {
+                  <option value="@course.CourseID" data-title="@course.Title" data-credits="@course.Credits">
+                    @course.Title (@course.Credits credits) - ID: @course.CourseID
+                  </option>
+                }
+              }
+            </select>
+            <input type="hidden" name="title" id="courseTitle" />
+            <input type="hidden" name="credits" id="courseCredits" />
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="/Students" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Enroll Student</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Current Enrollments</h5>
+        @if (student?.Enrollments != null && student.Enrollments.Any())
+        {
+          <ul class="enrollment-list small">
+            @foreach (var e in student.Enrollments)
+            {
+              <li>@e.Title (@e.Credits)</li>
+            }
+          </ul>
+        }
+        else
+        {
+          <div class="text-muted small">No current enrollments</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('courseSelect').addEventListener('change', function() {
+    var selected = this.options[this.selectedIndex];
+    document.getElementById('courseTitle').value = selected.getAttribute('data-title') || '';
+    document.getElementById('courseCredits').value = selected.getAttribute('data-credits') || '';
+  });
+</script>

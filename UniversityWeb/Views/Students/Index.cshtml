@@ -1,0 +1,55 @@
+@{
+    Layout = "_Layout";
+}
+@model List<Contracts.Models.Student>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Students</h1>
+  <div>
+    <a class="btn btn-outline-primary btn-sm" href="/Students">Refresh</a>
+  </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row g-3">
+  @foreach (var s in Model)
+  {
+    <div class="col-12 col-md-6">
+      <div class="card card-student shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div class="student-name">@s.FirstMidName @s.LastName</div>
+              <div class="text-muted small">Enrolled: @s.EnrollmentDate.ToString("d")</div>
+            </div>
+            <div>
+              <a href="/Students/Enroll/@s.ID" class="btn btn-sm btn-primary">Enroll</a>
+            </div>
+          </div>
+          
+          @if (s.Enrollments != null && s.Enrollments.Any())
+          {
+            <ul class="enrollment-list mt-3 small">
+              @foreach (var e in s.Enrollments)
+              {
+                <li>@e.Title (@e.Credits) - @((e.Grade.HasValue) ? e.Grade.ToString() : "N/A")</li>
+              }
+            </ul>
+          }
+          else
+          {
+            <div class="text-muted small mt-3">No courses</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

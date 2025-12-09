@@ -1,0 +1,32 @@
+@{
+    Layout = "_Layout";
+}
+@model List<Contracts.Models.Course>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Courses</h1>
+  <div>
+    <a class="btn btn-outline-primary btn-sm" href="/Courses">Refresh</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  @foreach (var c in Model)
+  {
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">@c.Title</div>
+              <div class="text-muted small">Course ID: @c.CourseID</div>
+            </div>
+            <div>
+              <span class="badge bg-primary">@c.Credits</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

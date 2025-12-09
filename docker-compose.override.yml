@@ -3,6 +3,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - Seq__ServerUrl=http://seq:80
     ports:
       - "5094:80"
     depends_on:
@@ -14,6 +15,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__CoursesAPIContext=Server=sqldata;Database=CoursesDB;User ID=sa;Password=My!P@ssword1;TrustServerCertificate=True
       - ASPNETCORE_URLS=http://+:8080
+      - Seq__ServerUrl=http://seq:80
     ports:
       - "5092:8080"
 
@@ -23,13 +25,20 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__StudentsAPIContext=Server=sqldata;Database=StudentDB;User Id=sa;Password=My!P@ssword1;Encrypt=False;TrustServerCertificate=True
       - ASPNETCORE_URLS=http://+:8080
+      - Seq__ServerUrl=http://seq:80
     ports:
       - "5090:8080"
       - "5091:443"
 
-  sqldata:
-    container_name: sqldata
-    volumes:
-      - sqldata-volume:/var/opt/mssql
+  universityweb:
+    container_name: universityweb
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - StudentsApi__BaseUrl=http://studentsapi:8080/
+      - CoursesApi__BaseUrl=http://coursesapi:8080/
+      - ASPNETCORE_URLS=http://+:80
+      - Seq__ServerUrl=http://seq:80
+    build:
+      context: .
     ports:
-      - "1433:1433"
+      - "5095:80"
