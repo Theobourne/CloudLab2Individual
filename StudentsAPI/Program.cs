@@ -34,6 +34,15 @@ try
     builder.Services.AddDbContext<StudentsAPIContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("StudentsAPIContext") ?? throw new InvalidOperationException("Connection string 'StudentsAPIContext' not found.")));
 
+    // Add Redis distributed caching
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? 
+                                Environment.GetEnvironmentVariable("Redis__ConnectionString") ?? 
+                                "redis:6379";
+        options.InstanceName = "StudentsAPI_";
+    });
+
     // Add services to the container.
 
     //builder.Services.AddControllers();
@@ -50,6 +59,12 @@ try
             builder.Configuration.GetConnectionString("StudentsAPIContext") ?? "",
             name: "StudentsDB",
             tags: new[] { "db", "sql", "sqlserver" })
+        .AddRedis(
+            builder.Configuration.GetConnectionString("Redis") ?? 
+            Environment.GetEnvironmentVariable("Redis__ConnectionString") ?? 
+            "redis:6379",
+            name: "Redis",
+            tags: new[] { "cache", "redis" })
         .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
     // 2. Add MassTransit

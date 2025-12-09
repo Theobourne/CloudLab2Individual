@@ -39,6 +39,15 @@ try
         options.UseSqlServer(builder.Configuration.GetConnectionString("CoursesAPIContext")
         ?? throw new InvalidOperationException("Connection string 'CoursesAPIContext' not found.")));
 
+    // Add Redis distributed caching
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? 
+                                Environment.GetEnvironmentVariable("Redis__ConnectionString") ?? 
+                                "redis:6379";
+        options.InstanceName = "CoursesAPI_";
+    });
+
     // Add services to the container.
     builder.Services.AddControllers().AddJsonOptions(x =>
         x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
@@ -49,6 +58,12 @@ try
             builder.Configuration.GetConnectionString("CoursesAPIContext") ?? "",
             name: "CoursesDB",
             tags: new[] { "db", "sql", "sqlserver" })
+        .AddRedis(
+            builder.Configuration.GetConnectionString("Redis") ?? 
+            Environment.GetEnvironmentVariable("Redis__ConnectionString") ?? 
+            "redis:6379",
+            name: "Redis",
+            tags: new[] { "cache", "redis" })
         .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
     builder.Services.AddMassTransit(x =>

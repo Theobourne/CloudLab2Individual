@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using StudentsAPI.Data;
 using Contracts.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace StudentsAPI.Controllers
 {
@@ -17,11 +20,21 @@ namespace StudentsAPI.Controllers
     {
         private readonly StudentsAPIContext _context;
         private readonly ILogger<StudentsController> _logger;
+        private readonly IDistributedCache _cache;
+        private readonly JsonSerializerOptions _jsonOptions;
 
-        public StudentsController(StudentsAPIContext context, ILogger<StudentsController> logger)
+        public StudentsController(StudentsAPIContext context, ILogger<StudentsController> logger, IDistributedCache cache)
         {
             _context = context;
             _logger = logger;
+            _cache = cache;
+            
+            // Configure JSON serialization to handle circular references
+            _jsonOptions = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                WriteIndented = false
+            };
         }
 
         // GET: api/Students
@@ -29,16 +42,38 @@ namespace StudentsAPI.Controllers
         public async Task<ActionResult<IEnumerable<Student>>> GetStudent()
         {
             _logger.LogInformation("Retrieving all students with enrollments");
+            
+            const string cacheKey = "students_all";
+            
             try
             {
-                // Include enrollments so the frontend can display each student's courses
-                var students = await _context.Student
+                // Try to get from cache first
+                var cachedData = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cachedData))
+                {
+                    _logger.LogInformation("Retrieved students from Redis cache");
+                    var students = JsonSerializer.Deserialize<List<Student>>(cachedData, _jsonOptions);
+                    return students ?? new List<Student>();
+                }
+
+                // If not in cache, get from database
+                _logger.LogInformation("Cache miss - retrieving students from database");
+                var studentsFromDb = await _context.Student
                     .Include(s => s.Enrollments)
                     .AsNoTracking()
                     .ToListAsync();
                 
-                _logger.LogInformation("Retrieved {StudentCount} students", students.Count);
-                return students;
+                // Store in cache for 5 minutes
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                };
+                
+                var serializedData = JsonSerializer.Serialize(studentsFromDb, _jsonOptions);
+                await _cache.SetStringAsync(cacheKey, serializedData, cacheOptions);
+                
+                _logger.LogInformation("Retrieved {StudentCount} students and cached the result", studentsFromDb.Count);
+                return studentsFromDb;
             }
             catch (Exception ex)
             {
@@ -53,21 +88,54 @@ namespace StudentsAPI.Controllers
         {
             _logger.LogInformation("Retrieving student with ID: {StudentId}", id);
             
-            //var student = await _context.Student.FindAsync(id);
-            var student = await _context.Student
-                .Include(s => s.Enrollments)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.ID == id);
-
-            if (student == null)
+            var cacheKey = $"student_{id}";
+            
+            try
             {
-                _logger.LogWarning("Student with ID: {StudentId} not found", id);
-                return NotFound();
-            }
+                // Try to get from cache first
+                var cachedData = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cachedData))
+                {
+                    _logger.LogInformation("Retrieved student {StudentId} from Redis cache", id);
+                    var student = JsonSerializer.Deserialize<Student>(cachedData, _jsonOptions);
+                    if (student == null)
+                    {
+                        return NotFound();
+                    }
+                    return student;
+                }
 
-            _logger.LogInformation("Retrieved student: {StudentName} with {EnrollmentCount} enrollments", 
-                $"{student.FirstMidName} {student.LastName}", student.Enrollments?.Count ?? 0);
-            return student;
+                // If not in cache, get from database
+                _logger.LogInformation("Cache miss - retrieving student {StudentId} from database", id);
+                var studentFromDb = await _context.Student
+                    .Include(s => s.Enrollments)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.ID == id);
+
+                if (studentFromDb == null)
+                {
+                    _logger.LogWarning("Student with ID: {StudentId} not found", id);
+                    return NotFound();
+                }
+
+                // Store in cache for 5 minutes
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                };
+                
+                var serializedData = JsonSerializer.Serialize(studentFromDb, _jsonOptions);
+                await _cache.SetStringAsync(cacheKey, serializedData, cacheOptions);
+
+                _logger.LogInformation("Retrieved student: {StudentName} with {EnrollmentCount} enrollments and cached the result", 
+                    $"{studentFromDb.FirstMidName} {studentFromDb.LastName}", studentFromDb.Enrollments?.Count ?? 0);
+                return studentFromDb;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving student {StudentId}", id);
+                throw;
+            }
         }
 
         // POST: api/Students/{studentId}/enroll
@@ -107,6 +175,11 @@ namespace StudentsAPI.Controllers
             _context.Enrollment.Add(enrollment);
             await _context.SaveChangesAsync();
 
+            // Invalidate cache for this student and all students list
+            await _cache.RemoveAsync($"student_{studentId}");
+            await _cache.RemoveAsync("students_all");
+            _logger.LogInformation("Cache invalidated for student {StudentId}", studentId);
+
             _logger.LogInformation("Successfully enrolled student {StudentId} in course {CourseId} - {CourseTitle}", 
                 studentId, request.CourseID, request.Title);
             
@@ -132,7 +205,11 @@ namespace StudentsAPI.Controllers
             try
             {
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Successfully updated student {StudentId}", id);
+                
+                // Invalidate cache for this student and all students list
+                await _cache.RemoveAsync($"student_{id}");
+                await _cache.RemoveAsync("students_all");
+                _logger.LogInformation("Successfully updated student {StudentId} and invalidated cache", id);
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -164,7 +241,10 @@ namespace StudentsAPI.Controllers
                 _context.Student.Add(student);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Successfully created student with ID: {StudentId}", student.ID);
+                // Invalidate all students cache
+                await _cache.RemoveAsync("students_all");
+                _logger.LogInformation("Successfully created student with ID: {StudentId} and invalidated cache", student.ID);
+                
                 return CreatedAtAction("GetStudent", new { id = student.ID }, student);
             }
             catch (Exception ex)
@@ -191,7 +271,11 @@ namespace StudentsAPI.Controllers
             _context.Student.Remove(student);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Successfully deleted student {StudentId}", id);
+            // Invalidate cache for this student and all students list
+            await _cache.RemoveAsync($"student_{id}");
+            await _cache.RemoveAsync("students_all");
+            _logger.LogInformation("Successfully deleted student {StudentId} and invalidated cache", id);
+            
             return NoContent();
         }
 

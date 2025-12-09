@@ -18,6 +18,7 @@
     <None Include=".dockerignore" />
     <None Include="LOGGING_README.md" />
     <None Include="README.md" />
+    <None Include="SEQ_FIX_SUMMARY.md" />
     <None Include="SEQ_TROUBLESHOOTING.md" />
     <None Include="UniversityWeb\appsettings.json" />
     <None Include="UniversityWeb\Controllers\CoursesController.cs" />
