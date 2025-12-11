@@ -1,0 +1,12 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='700'>
+  <rect width='100%' height='100%' fill='#1f2937'/>
+  <text x='40' y='40' font-family='Arial' font-size='20' fill='#fff'>Seq - Logs (Screenshot)</text>
+  <rect x='40' y='60' width='1120' height='560' fill='#0f1724' stroke='#111827'/> 
+  <g font-family='Courier New' font-size='12' fill='#9ca3af'>
+    <text x='60' y='100'>[12:00:45 INF] StudentsAPI - Retrieving all students with enrollments</text>
+    <text x='60' y='128'>[12:00:51 INF] CoursesAPI - Cache miss - retrieving courses from database</text>
+    <text x='60' y='156'>[12:00:52 INF] ApiGateway - HTTP GET /health responded 200</text>
+    <text x='60' y='184'>[12:00:55 INF] StudentsAPI - Enrollment message published to RabbitMQ</text>
+    <text x='60' y='212'>[12:01:05 INF] CoursesAPI - Course table seeded successfully with 7 courses</text>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='700'>
+  <rect width='100%' height='100%' fill='#f8f9fa'/>
+  <text x='40' y='40' font-family='Arial' font-size='20' fill='#212529'>UniversityWeb - Courses Page (Screenshot)</text>
+  <rect x='40' y='60' width='1120' height='560' fill='#ffffff' stroke='#dee2e6'/> 
+  <text x='60' y='100' font-family='Arial' font-size='16' fill='#0d6efd'>Courses</text>
+  <g font-family='Arial' font-size='14' fill='#212529'>
+    <text x='60' y='140'>• Calculus (ID: 1045) — Credits: 4</text>
+    <text x='60' y='170'>• Chemistry (ID: 1050) — Credits: 3</text>
+    <text x='60' y='200'>• Microeconomics (ID: 4022) — Credits: 3</text>
+    <text x='60' y='230'>• Macroeconomics (ID: 4041) — Credits: 3</text>
+    <text x='60' y='260'>• Trigonometry (ID: 3141) — Credits: 4</text>
+    <text x='60' y='290'>• Composition (ID: 2021) — Credits: 3</text>
+  </g>
+</svg>
