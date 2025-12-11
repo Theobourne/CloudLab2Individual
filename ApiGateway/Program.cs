@@ -29,13 +29,31 @@ try
      .AddJsonFile("ocelot.json");
     builder.Services.AddOcelot();
     
+    // Add health checks
+    builder.Services.AddHealthChecks();
+    
     var app = builder.Build();
     
     // Add Serilog request logging
     app.UseSerilogRequestLogging();
     
+    // Health check endpoints - handle these BEFORE Ocelot catches everything
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/health" || context.Request.Path == "/liveness")
+        {
+            context.Response.StatusCode = 200;
+            await context.Response.WriteAsync("Healthy");
+            return;
+        }
+        await next();
+    });
+    
     Log.Information("ApiGateway web host started successfully");
-    app.UseOcelot().Wait();
+    
+    // Use Ocelot middleware
+    await app.UseOcelot();
+    
     app.Run();
 }
 catch (Exception ex)

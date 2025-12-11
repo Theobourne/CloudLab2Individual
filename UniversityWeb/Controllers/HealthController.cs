@@ -7,21 +7,27 @@ namespace UniversityWeb.Controllers
     public class HealthController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public HealthController(IHttpClientFactory httpClientFactory)
+        public HealthController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> Index()
         {
             var healthChecks = new List<HealthCheckResult>();
 
+            // Use configured URLs instead of hardcoded ones
+            var studentsApiUrl = _configuration["StudentsApi:BaseUrl"] ?? _configuration["StudentsApi__BaseUrl"] ?? "http://studentsapi:80/";
+            var coursesApiUrl = _configuration["CoursesApi:BaseUrl"] ?? _configuration["CoursesApi__BaseUrl"] ?? "http://coursesapi:80/";
+
             // Check Students API
-            healthChecks.Add(await CheckService("StudentsAPI", "http://studentsapi:8080/health"));
+            healthChecks.Add(await CheckService("StudentsAPI", $"{studentsApiUrl.TrimEnd('/')}/health"));
 
             // Check Courses API
-            healthChecks.Add(await CheckService("CoursesAPI", "http://coursesapi:8080/health"));
+            healthChecks.Add(await CheckService("CoursesAPI", $"{coursesApiUrl.TrimEnd('/')}/health"));
 
             return View(healthChecks);
         }

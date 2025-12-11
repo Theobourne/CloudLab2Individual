@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: university-config
+  namespace: university
+data:
+  # Redis connection
+  REDIS_CONNECTION: "redis:6379"
+  # Seq logging
+  SEQ_SERVER_URL: "http://seq:80"
+  # API URLs
+  STUDENTS_API_URL: "http://studentsapi:80/"
+  COURSES_API_URL: "http://coursesapi:80/"

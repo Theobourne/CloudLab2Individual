@@ -6,7 +6,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "studentsapi",
-          "Port": 8080
+          "Port": 80
         }
       ],
       "UpstreamPathTemplate": "/Students",
@@ -18,7 +18,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "coursesapi",
-          "Port": 8080
+          "Port": 80
         }
       ],
       "UpstreamPathTemplate": "/Courses",
@@ -30,7 +30,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "coursesapi",
-          "Port": 8080
+          "Port": 80
         }
       ],
       "UpstreamPathTemplate": "/Courses/{id}",

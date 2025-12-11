@@ -1,0 +1,96 @@
+# Seq Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seq
+  namespace: university
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seq
+  template:
+    metadata:
+      labels:
+        app: seq
+    spec:
+      containers:
+      - name: seq
+        image: datalust/seq:2024.1
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: seq-storage
+          mountPath: /data
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: seq-storage
+        persistentVolumeClaim:
+          claimName: seq-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seq
+  namespace: university
+spec:
+  selector:
+    app: seq
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  type: ClusterIP
+---
+# Optional: LoadBalancer for external access to Seq UI
+apiVersion: v1
+kind: Service
+metadata:
+  name: seq-external
+  namespace: university
+spec:
+  selector:
+    app: seq
+  ports:
+  - port: 5341
+    targetPort: 80
+    name: http
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seq-pvc
+  namespace: university
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
